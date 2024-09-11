@@ -1,4 +1,4 @@
-package com.api.shops.models;
+package com.api.shops.model;
 
 import jakarta.persistence.*;
 
