@@ -16,6 +16,7 @@ public class Category {
 
     // constructors
     public Category() {}
+    public Category(String name) {}
 
     // getters and setters
 

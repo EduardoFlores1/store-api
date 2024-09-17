@@ -1,19 +1,31 @@
 package com.api.shops.service.product;
 
+import com.api.shops.exceptions.CategoryNotFoundException;
 import com.api.shops.exceptions.ProductNotFoundException;
+import com.api.shops.mappers.ProductMapper;
+import com.api.shops.model.Category;
 import com.api.shops.model.Product;
+import com.api.shops.repository.CategoryRepository;
 import com.api.shops.repository.ProductRepository;
+import com.api.shops.request.product.AddProductRequest;
+import com.api.shops.request.product.UpdateProductRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductService implements IProductService{
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final ProductMapper productMapper;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductMapper productMapper) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+        this.productMapper = productMapper;
     }
 
     @Override
@@ -23,13 +35,33 @@ public class ProductService implements IProductService{
     }
 
     @Override
-    public Product addProduct(Product product) {
-        return null;
+    @Transactional
+    public Product addProduct(AddProductRequest request) {
+        Category category = Optional.ofNullable(categoryRepository.findByName(request.getCategory().getName()))
+                .orElseGet(() -> {
+                    Category newCategory = new Category(request.getCategory().getName());
+                    return categoryRepository.save(newCategory);
+                });
+        request.setCategory(category);
+        return productRepository.save(productMapper.addToModel(request));
     }
 
     @Override
-    public void updateProduct(Long productId, Product product) {
+    public Product updateProduct(Long productId, UpdateProductRequest request) {
+        return productRepository.findById(productId)
+                .map(existProduct -> {
+                    Category category = Optional.ofNullable(categoryRepository.findByName(request.getName()))
+                            .orElseThrow(() -> new CategoryNotFoundException("Category Not Found!"));
 
+                    existProduct.setName(request.getName());
+                    existProduct.setBrand(request.getBrand());
+                    existProduct.setPrice(request.getPrice());
+                    existProduct.setInventory(request.getInventory());
+                    existProduct.setDescription(request.getDescription());
+                    existProduct.setCategory(category);
+                    return productRepository.save(existProduct);
+                })
+                .orElseThrow(() -> new ProductNotFoundException("Product Not Found!"));
     }
 
     @Override
