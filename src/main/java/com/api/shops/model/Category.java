@@ -1,4 +1,4 @@
-package com.api.shops.models;
+package com.api.shops.model;
 
 import jakarta.persistence.*;
 
@@ -16,6 +16,7 @@ public class Category {
 
     // constructors
     public Category() {}
+    public Category(String name) {}
 
     // getters and setters
 
